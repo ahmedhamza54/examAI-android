@@ -24,21 +24,6 @@ import java.io.File
 @Composable
 fun GetStartedScreen(navController: NavController) {
     val pagerState = rememberPagerState()
-    val filePath = "/Downloads/dhia.pdf"
-    val file = File(filePath)
-    if (file.exists()) {
-        Log.d("FileCheck", "File exists at $filePath")
-    } else {
-        Log.e("FileCheck", "File does not exist at $filePath")
-    }
-    val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-    val pdfFile = File(downloadsDir, "dhia.pdf")
-    if (pdfFile.exists()) {
-        Log.d("FileCheck", "File found at: ${pdfFile.absolutePath}")
-    } else {
-        Log.e("FileCheck", "File does not exist at: ${pdfFile.absolutePath}")
-    }
-
 
     Box(
         modifier = Modifier

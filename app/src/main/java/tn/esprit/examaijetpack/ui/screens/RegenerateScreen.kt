@@ -13,36 +13,42 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.plcoding.pdf_renderercompose.PdfViewerScreen
 import fi.iki.elonen.NanoHTTPD
+import tn.esprit.examaijetpack.ui.viewModels.RegenerateViewModel
 import java.io.File
 import java.io.OutputStream
-
-//loadUrl("file:///android_asset/pdfjs/viewer.html?file=$pdfPath")
-// val serverUrl = "http://localhost:8081/pdfjs/viewer.html?file=/storage/emulated/0/Download/dhia.pdf"//$pdfPath
-// val serverUrl = "file:///android_asset/pdfjs/viewer.html?file=/storage/emulated/0/Download/dhia.pdf"//$pdfPath
-//loadUrl(serverUrl)
-//loadUrl("file:///android_asset/test.html")
-// Generate the PDF file
-//  val pdfUri = remember {
-//    generatePdf(context, "Exam_$examId", examText)
-//}
-//val pdfPath = "file://${context.filesDir}/Exam_$examId.pdf"
-//    val pdfPath = pdfUri?.let { getFilePathFromUri(context, it) }
-
+var examTextToRegenerate = ""
 @Composable
-fun RegenerateScreen(context: Context, examId: String, examText: String) {
-    val pdfUri = remember {
-        generatePdf(context, "Exam_$examId", examText)
+fun RegenerateScreen(context: Context, examId: String, examText: String,regenerateViewModel: RegenerateViewModel = viewModel()) {
+if (examTextToRegenerate.isEmpty())
+{
+    examTextToRegenerate = examText
+}
+    var regenerateIsClicked = false
+    val isLoading by regenerateViewModel.isLoading.collectAsState()
+    val regenerateResponse by regenerateViewModel.regenerateResponse.collectAsState()
+
+    var feedbackText by remember { mutableStateOf("") }
+    //val pdfUri = remember {
+      //  generatePdf(context, "Exam_$examId", examText)
+    //}
+    val pdfUri = remember(regenerateResponse) {
+        regenerateResponse?.let { (newId, newText) ->
+            generatePdf(context, "Exam_$newId", newText)
+        } ?: generatePdf(context, "Exam_$examId", examText)
     }
 
     Column(
@@ -51,27 +57,38 @@ fun RegenerateScreen(context: Context, examId: String, examText: String) {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Title
         Text(
             "Your Exam",
             style = MaterialTheme.typography.h6,
             modifier = Modifier.padding(bottom = 16.dp)
         )
+       // lateinit var examTextToRegenerate: String
+        if (regenerateResponse != null  )  {
+            regenerateIsClicked = false
+            val (newId, newText) = regenerateResponse!!
+            examTextToRegenerate = newText
+           // Log.d("exam text ", examTextToRegenerate)
+            //Log.d("exam text ", examTextToRegenerate)
 
-        // Display PDF using PdfViewerScreen
-        if (pdfUri != null) {
-            Box(
+           // val newPdfUri = generatePdf(context, "Exam_$newId", newText)
+
+            // Display regenerated PDF
+            if (pdfUri != null) {
+                PdfViewerScreen(
+                    pdfUri = pdfUri,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                )
+            }
+        } else if (pdfUri != null) {
+            // Display initial PDF
+            PdfViewerScreen(
+                pdfUri = pdfUri,
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .background(Color.Gray.copy(alpha = 0.2f)),
-                contentAlignment = Alignment.Center
-            ) {
-                PdfViewerScreen(
-                    pdfUri = pdfUri ,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
+            )
         } else {
             Box(
                 modifier = Modifier
@@ -83,38 +100,63 @@ fun RegenerateScreen(context: Context, examId: String, examText: String) {
                 Text("Failed to create PDF.", color = Color.Red)
             }
         }
-
         Spacer(modifier = Modifier.height(16.dp))
 
         // View PDF Button
         if (pdfUri != null) {
-            Button(
-                onClick = { openPdf(context, pdfUri) },
-                modifier = Modifier
-                    .fillMaxWidth(0.5f)
-                    .align(Alignment.CenterHorizontally)
-            ) {
+            Button(onClick = { openPdf(context, pdfUri) }) {
                 Text("View PDF")
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-
         // Feedback Section
-        FeedbackSection()
+        FeedbackSection(
+            feedbackText = feedbackText,
+            onFeedbackTextChange = { feedbackText = it },
+            onRegenerateClick = {
+            Log.d("exam text ", examTextToRegenerate)
+                regenerateViewModel.regenerateExam(examId, examTextToRegenerate , feedbackText)
+                regenerateIsClicked = true
+            }
+
+        )
+
+
+    }
+    if (isLoading) {
+        var dotsCount by remember { mutableStateOf(1) }
+
+        LaunchedEffect(isLoading) {
+            while (isLoading) {
+                dotsCount = (dotsCount % 5) + 1 // Cycle from 1 to 5
+                kotlinx.coroutines.delay(500) // Adjust delay for speed of animation
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White.copy(alpha = 0.7f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Generating" + ".".repeat(dotsCount),
+                style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            )
+        }
     }
 }
 
-
-
-
 @Composable
-fun FeedbackSection() {
-    var feedbackText by remember { mutableStateOf("") }
-
+fun FeedbackSection(
+    feedbackText: String,
+    onFeedbackTextChange: (String) -> Unit,
+    onRegenerateClick: () -> Unit
+) {
     TextField(
         value = feedbackText,
-        onValueChange = { feedbackText = it },
+        onValueChange = onFeedbackTextChange,
         placeholder = { Text("Didn't like something?") },
         modifier = Modifier
             .fillMaxWidth()
@@ -122,7 +164,6 @@ fun FeedbackSection() {
         colors = TextFieldDefaults.textFieldColors(backgroundColor = Color.Gray.copy(alpha = 0.1f))
     )
 
-    // Regenerate Button
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -133,7 +174,7 @@ fun FeedbackSection() {
                 ),
                 shape = MaterialTheme.shapes.medium
             )
-            .clickable { /* Handle Regenerate Action */ }
+            .clickable(onClick = onRegenerateClick)
             .padding(vertical = 12.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -146,7 +187,8 @@ fun FeedbackSection() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 16.dp),
+            .padding(top = 16.dp)
+           ,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         // Share As Button
@@ -178,6 +220,7 @@ fun FeedbackSection() {
         }
     }
 }
+
 
 fun generatePdf(context: Context, fileName: String, textContent: String): Uri? {
     val document = PdfDocument()
@@ -228,6 +271,7 @@ fun generatePdf(context: Context, fileName: String, textContent: String): Uri? {
     } finally {
         document.close()
     }
+
 }
 
 fun openPdf(context: Context, pdfUri: Uri) {
@@ -237,40 +281,4 @@ fun openPdf(context: Context, pdfUri: Uri) {
     }
     context.startActivity(intent)
 }
-fun getFilePathFromUri(context: Context, uri: Uri): String? {
-    val projection = arrayOf(MediaStore.Files.FileColumns.DATA)
-    context.contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
-        val columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATA)
-        if (cursor.moveToFirst()) {
-            return cursor.getString(columnIndex)
-        }
-    }
-    return null
-}
-class AssetServer(context: Context) : NanoHTTPD(8081) {
-    private val assets = context.assets
-
-    override fun serve(session: IHTTPSession?): Response {
-        val uri = session?.uri ?: return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "Not Found")
-        return try {
-            val filePath = uri.removePrefix("/")
-            val inputStream = assets.open(filePath)
-            newChunkedResponse(Response.Status.OK, getMimeType(filePath), inputStream)
-        } catch (e: Exception) {
-            newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "File Not Found")
-        }
-    }
-
-    private fun getMimeType(filePath: String): String {
-        return when {
-            filePath.endsWith(".js") -> "application/javascript"
-            filePath.endsWith(".css") -> "text/css"
-            filePath.endsWith(".html") -> "text/html"
-            filePath.endsWith(".pdf") -> "application/pdf"
-            else -> "application/octet-stream"
-        }
-    }
-}
-
-
 

@@ -2,6 +2,7 @@ package tn.esprit.examaijetpack.ui.navigation
 
 import CreateScreen
 import RegenerateScreen
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -21,9 +22,7 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import androidx.compose.ui.Modifier
 
-
 fun String.encode(): String = URLEncoder.encode(this, StandardCharsets.UTF_8.toString())
-
 
 @Composable
 fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
@@ -42,7 +41,7 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
             // Navigate to home screen when login succeeds
             if (loginSuccess && navController.currentDestination?.route != "home") {
                 navController.navigate("home") {
-                    popUpTo("login") { inclusive = true } // Optional: Clear the backstack to avoid navigating back to login
+                    popUpTo(0) { inclusive = true } // Clears the entire backstack
                 }
             }
 
@@ -58,6 +57,11 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
             )
         }
         composable("home") {
+            // Handle back button to exit the app from the home screen
+            BackHandler {
+                navController.popBackStack() // Exit the app when back is pressed on the home screen
+            }
+
             HomeScreen(navController)
         }
         composable("signup") {
@@ -73,7 +77,7 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
 
             if (signUpSuccess) {
                 navController.navigate("home") {
-                    popUpTo("getStarted") { inclusive = true } // Clear the stack up to getStarted
+                    popUpTo(0) { inclusive = true } // Clears the entire backstack
                 }
             }
 
