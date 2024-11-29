@@ -31,20 +31,19 @@ import tn.esprit.examaijetpack.ui.viewModels.RegenerateViewModel
 import java.io.File
 import java.io.OutputStream
 var examTextToRegenerate = ""
+
 @Composable
 fun RegenerateScreen(context: Context, examId: String, examText: String,regenerateViewModel: RegenerateViewModel = viewModel()) {
-if (examTextToRegenerate.isEmpty())
-{
-    examTextToRegenerate = examText
-}
+    if (examTextToRegenerate.isEmpty())
+    {
+        examTextToRegenerate = examText
+    }
     var regenerateIsClicked = false
     val isLoading by regenerateViewModel.isLoading.collectAsState()
     val regenerateResponse by regenerateViewModel.regenerateResponse.collectAsState()
 
     var feedbackText by remember { mutableStateOf("") }
-    //val pdfUri = remember {
-      //  generatePdf(context, "Exam_$examId", examText)
-    //}
+
     val pdfUri = remember(regenerateResponse) {
         regenerateResponse?.let { (newId, newText) ->
             generatePdf(context, "Exam_$newId", newText)
@@ -112,14 +111,18 @@ if (examTextToRegenerate.isEmpty())
         Spacer(modifier = Modifier.height(16.dp))
         // Feedback Section
         FeedbackSection(
+            context = context,
             feedbackText = feedbackText,
+            pdfUri = pdfUri, // Pass pdfUri here
             onFeedbackTextChange = { feedbackText = it },
             onRegenerateClick = {
-            Log.d("exam text ", examTextToRegenerate)
-                regenerateViewModel.regenerateExam(examId, examTextToRegenerate , feedbackText)
+                Log.d("exam text ", examTextToRegenerate)
+                regenerateViewModel.regenerateExam(examId, examTextToRegenerate, feedbackText)
                 regenerateIsClicked = true
+            },
+            onShareClick = {
+                pdfUri?.let { sharePdf(context, it) } // Handle the share action
             }
-
         )
 
 
@@ -150,9 +153,12 @@ if (examTextToRegenerate.isEmpty())
 
 @Composable
 fun FeedbackSection(
+    context: Context,
     feedbackText: String,
+    pdfUri: Uri?,
     onFeedbackTextChange: (String) -> Unit,
-    onRegenerateClick: () -> Unit
+    onRegenerateClick: () -> Unit,
+    onShareClick: () -> Unit
 ) {
     TextField(
         value = feedbackText,
@@ -193,7 +199,9 @@ fun FeedbackSection(
     ) {
         // Share As Button
         Button(
-            onClick = { /* Handle Share Action */ },
+            onClick = {
+                pdfUri?.let { sharePdf(context, it) }
+            },
             colors = ButtonDefaults.buttonColors(
                 backgroundColor = Color.Red,
                 contentColor = Color.White
@@ -204,6 +212,7 @@ fun FeedbackSection(
         ) {
             Text(text = "Share As")
         }
+
 
         // Edit Button
         Button(
@@ -281,4 +290,18 @@ fun openPdf(context: Context, pdfUri: Uri) {
     }
     context.startActivity(intent)
 }
-
+fun sharePdf(context: Context, pdfUri: Uri) {
+    try {
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "application/pdf"
+            putExtra(Intent.EXTRA_STREAM, pdfUri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) // Grant temporary permission to access the URI
+        }
+        context.startActivity(
+            Intent.createChooser(shareIntent, "Share PDF via")
+        )
+    } catch (e: Exception) {
+        Log.e("Share PDF", "Error sharing PDF: ${e.localizedMessage}")
+        e.printStackTrace()
+    }
+}

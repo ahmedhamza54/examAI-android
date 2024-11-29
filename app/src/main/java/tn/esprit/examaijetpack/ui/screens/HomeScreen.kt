@@ -3,6 +3,8 @@ package tn.esprit.examaijetpack.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
@@ -19,24 +21,36 @@ import tn.esprit.examaijetpack.R
 import tn.esprit.examaijetpack.ui.navigation.BottomNavigationBar
 
 //@Preview
+import androidx.compose.runtime.*
+import androidx.lifecycle.viewmodel.compose.viewModel
+import tn.esprit.examaijetpack.ui.viewmodels.HomeViewModel
+import tn.esprit.examaijetpack.ui.viewmodels.Exam
+
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(
+    navController: NavController,
+    homeViewModel: HomeViewModel = viewModel()
+) {
+    val exams by homeViewModel.exams.collectAsState()
+
+    LaunchedEffect(Unit) {
+        homeViewModel.fetchExams()
+    }
+
     Scaffold(
         topBar = { HomeTopBar() },
-       // bottomBar = { BottomNavigationBar(navController) }
+        // bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(16.dp)
         ) {
-            // Welcome Section
             WelcomeSection()
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Your Exams Section
-            ExamsSection()
+            ExamsSection(exams = exams)
         }
     }
 }
@@ -97,7 +111,7 @@ fun WelcomeSection() {
 }
 
 @Composable
-fun ExamsSection() {
+fun ExamsSection(exams: List<Exam>) {
     Column {
         Text(
             text = "Your Exams",
@@ -112,10 +126,18 @@ fun ExamsSection() {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Placeholder for exam list
-        repeat(3) {
-            ExamItem()
-            Spacer(modifier = Modifier.height(8.dp))
+        if (exams.isEmpty()) {
+            Text("No exams available.", color = Color.Gray)
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(), // Allows the column to fill available space
+                contentPadding = PaddingValues(16.dp), // Padding around the entire column
+                verticalArrangement = Arrangement.spacedBy(8.dp) // Space between items
+            ) {
+                items(exams) { exam ->
+                    ExamItem(exam = exam)
+                }
+            }
         }
 
         Button(
@@ -124,19 +146,18 @@ fun ExamsSection() {
             shape = RoundedCornerShape(50),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(text = "View 231 Exams")
+            Text(text = "View All Exams")
         }
     }
 }
 
 @Composable
-fun ExamItem() {
+fun ExamItem(exam: Exam) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
     ) {
-        // Exam Icon Placeholder
         Box(
             modifier = Modifier
                 .size(50.dp)
@@ -146,9 +167,9 @@ fun ExamItem() {
         Spacer(modifier = Modifier.width(16.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = "Exam name", fontWeight = FontWeight.Bold)
-            Text(text = "Exam Creation Date", color = Color.Gray, fontSize = 12.sp)
-            Text(text = "Exam subject", color = Color.Gray, fontSize = 12.sp)
+            Text(text = exam.subject, fontWeight = FontWeight.Bold)
+            Text(text = "Grade: ${exam.grade}", color = Color.Gray, fontSize = 12.sp)
+            Text(text = "Difficulty: ${exam.difficultyLevel}", color = Color.Gray, fontSize = 12.sp)
         }
 
         Spacer(modifier = Modifier.width(8.dp))

@@ -62,7 +62,7 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
                 navController.popBackStack() // Exit the app when back is pressed on the home screen
             }
 
-            HomeScreen(navController)
+            HomeScreen(navController,  homeViewModel = viewModel())
         }
         composable("signup") {
             val viewModel: SignUpViewModel = viewModel()
