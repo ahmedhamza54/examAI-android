@@ -240,16 +240,18 @@ fun generatePdf(context: Context, fileName: String, textContent: String): Uri? {
     val paint = android.graphics.Paint().apply {
         textSize = 12f
         color = android.graphics.Color.BLACK
+        textAlign = android.graphics.Paint.Align.RIGHT // Right-align the text
     }
 
-    val x = 10f
+    val pageWidth = pageInfo.pageWidth.toFloat()
     var y = 25f
     val lineHeight = paint.textSize + 4
 
     try {
         // Write text to the PDF canvas
         textContent.split("\n").forEach { line ->
-            canvas.drawText(line, x, y, paint)
+            val adjustedLine = line.replace("+", " ") // Replace "+" with spaces
+            canvas.drawText(adjustedLine, pageWidth - 10f, y, paint) // Align text to the right
             y += lineHeight
         }
         document.finishPage(page)
@@ -257,7 +259,7 @@ fun generatePdf(context: Context, fileName: String, textContent: String): Uri? {
         val resolver = context.contentResolver
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, "$fileName.pdf")
-            put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
+             put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
             put(
                 MediaStore.MediaColumns.RELATIVE_PATH,
                 Environment.DIRECTORY_DOCUMENTS
@@ -280,8 +282,8 @@ fun generatePdf(context: Context, fileName: String, textContent: String): Uri? {
     } finally {
         document.close()
     }
-
 }
+
 
 fun openPdf(context: Context, pdfUri: Uri) {
     val intent = Intent(Intent.ACTION_VIEW).apply {
