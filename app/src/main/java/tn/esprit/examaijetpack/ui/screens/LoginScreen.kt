@@ -6,29 +6,49 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import tn.esprit.examaijetpack.R
+import tn.esprit.examaijetpack.ui.viewModels.LoginViewModel
+import android.content.Context
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.datastore.preferences.preferencesDataStore
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_prefs")
+
 
 @Composable
 fun LoginScreen(
-    email: String,
-    password: String,
-    isLoading: Boolean,
-    errorMessage: String?,
-    onEmailChange: (String) -> Unit,
-    onPasswordChange: (String) -> Unit,
-    onLoginClick: () -> Unit,
+    viewModel: LoginViewModel,
+    onLoginSuccess: () -> Unit,
     onSignUpClick: () -> Unit
 ) {
+    val email = viewModel.email.observeAsState("")
+    val password = viewModel.password.observeAsState("")
+    val isLoading = viewModel.isLoading.observeAsState(false)
+    val errorMessage = viewModel.errorMessage.observeAsState(null)
+    val loginSuccess = viewModel.loginSuccess.observeAsState(false)
+    val teacherId = viewModel.teacherId.observeAsState(false).value
+    val specialization = viewModel.specialization.observeAsState(false).value
+    val context = LocalContext.current // Get the current context
+
+    if (loginSuccess.value == true ) {
+        LaunchedEffect(Unit) {
+            viewModel.saveTeacherId(context,teacherId.toString())
+            viewModel.saveSpecialization(context,specialization.toString())
+        }
+        onLoginSuccess()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -36,88 +56,48 @@ fun LoginScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Logo
         Image(
-            painter = painterResource(id = R.drawable.exam_ai_logo),
-            contentDescription = "Logo",
-            modifier = Modifier.size(180.dp)
+            painter = painterResource(id = R.drawable.exam_ai_logo), // Replace with your logo's resource ID
+            contentDescription = "App Logo",
+            modifier = Modifier
+                .size(150.dp)
+                .padding(bottom = 32.dp)
         )
+        Text("Login to ExamAI", fontSize = 24.sp, modifier = Modifier.padding(8.dp))
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Welcome Text
-        Text(
-            text = "Welcome to ExamAI",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colors.primary
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Email Input Field
         OutlinedTextField(
-            value = email,
-            onValueChange = onEmailChange,
+            value = email.value,
+            onValueChange = { viewModel.email.value = it },
             label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
-            keyboardActions = KeyboardActions.Default
+            modifier = Modifier.fillMaxWidth()
         )
-
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Password Input Field
         OutlinedTextField(
-            value = password,
-            onValueChange = onPasswordChange,
+            value = password.value,
+            onValueChange = { viewModel.password.value = it },
             label = { Text("Password") },
-            modifier = Modifier.fillMaxWidth(),
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions.Default
+            modifier = Modifier.fillMaxWidth()
         )
-
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Error Message
-        if (!errorMessage.isNullOrEmpty()) {
-            Text(
-                text = errorMessage,
-                color = Color.Red,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
+        errorMessage.value?.let {
+            Text(it, color = MaterialTheme.colors.error, modifier = Modifier.padding(8.dp))
         }
 
-        // Login Button
         Button(
-            onClick = onLoginClick,
+            onClick = { viewModel.login() },
             modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading
+            enabled = !isLoading.value
         ) {
-            Text(if (isLoading) "Logging in..." else "Login")
+            Text(if (isLoading.value) "Logging in..." else "Login")
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Sign-Up Link
         TextButton(onClick = onSignUpClick) {
-            Text("Don't have an account? Sign Up", color = MaterialTheme.colors.primary)
+            Text("Don't have an account? Sign Up")
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun LoginScreenPreview() {
-    LoginScreen(
-        email = "",
-        password = "",
-        isLoading = false,
-        errorMessage = null,
-        onEmailChange = {},
-        onPasswordChange = {},
-        onLoginClick = {},
-        onSignUpClick = {}
-    )
 }

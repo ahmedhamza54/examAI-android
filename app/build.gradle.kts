@@ -60,7 +60,7 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
+    //implementation(libs.androidx.material3)
 
     // Accompanist Pager for swipe functionality
     implementation("com.google.accompanist:accompanist-pager:0.31.3-beta")
@@ -74,6 +74,11 @@ dependencies {
     implementation ("androidx.compose.ui:ui:1.6.0")
     implementation ("androidx.compose.foundation:foundation:1.6.0")
     implementation ("androidx.navigation:navigation-compose:2.7.2")
+    implementation ("androidx.datastore:datastore-preferences:1.0.0")
+    implementation ("androidx.compose.material3:material3:1.3.1")
+    implementation ("androidx.compose.ui:ui:1.7.5")  // Ensure you have a Compose version >= 1.1.0
+    implementation ("androidx.compose.foundation:foundation:1.7.5")
+    implementation ("androidx.compose.material:material:1.7.5")
    // implementation ("com.github.barteksc:android-pdf-viewer:3.2.0-beta.1")
 
     //  implementation ("com.github.barteksc:android-pdf-viewer:2.8.2")

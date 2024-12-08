@@ -1,3 +1,4 @@
+import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -11,19 +12,35 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import tn.esprit.examaijetpack.ui.Models.Exam
+import tn.esprit.examaijetpack.ui.screens.dataStore
 import tn.esprit.examaijetpack.ui.viewModels.CreateViewModel
+
+//val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_prefs")
 
 @Composable
 fun CreateScreen(
     onNavigateToRegenerate: (String, String) -> Unit,
     viewModel: CreateViewModel = viewModel()
 ) {
+    val context = LocalContext.current // Get the current context
+
+    //shared preferences
+    val teacherIdFlow = getTeacherId(context)
+    val teacherId by teacherIdFlow.collectAsState(initial = "Unknown")
+
+    val specializationFlow = getSpecialization(context)
+    val specialization by specializationFlow.collectAsState(initial = "Unknown")
+
     // UI States
     var selectedGrade by remember { mutableStateOf<String?>(null) }
     var selectedSemester by remember { mutableStateOf<String?>(null) }
@@ -55,7 +72,7 @@ fun CreateScreen(
         )
 
         // Grade Selection
-        Text("Grade", style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Medium))
+        Text("niveau", style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Medium))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -79,7 +96,6 @@ fun CreateScreen(
                 }
             }
         }
-
         // Semester Selection
         AnimatedVisibility(
             visible = selectedGrade != null,
@@ -88,7 +104,7 @@ fun CreateScreen(
         ) {
             Column {
                 Text(
-                    text = "Semester",
+                    text = "Trimestre",
                     style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Medium),
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
@@ -105,7 +121,7 @@ fun CreateScreen(
                                 selectedChapters = emptySet() // Reset chapters on semester change
                                 selectedGrade?.let { grade ->
                                     // Fetch chapters dynamically based on grade and semester
-                                    viewModel.getChapters("Math", grade, semester)
+                                    viewModel.getChapters(specialization.toString(), grade, semester)
                                 }
                                       },
                             colors = ButtonDefaults.buttonColors(
@@ -135,7 +151,7 @@ fun CreateScreen(
             ) {
                 // Chapters Selection
                 Text(
-                    text = "Chapters",
+                    text = "Chapitres",
                     style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Medium),
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
@@ -186,14 +202,14 @@ fun CreateScreen(
 
                 // Key Words Input
                 Text(
-                    text = "Key Words",
+                    text = "suggestions",
                     style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Medium),
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
                 TextField(
                     value = prompt,
                     onValueChange = { prompt = it },
-                    placeholder = { Text("Enter your prompt") },
+                    placeholder = { Text("Écrivez ici toutes vos suggestions") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(8.dp),
@@ -206,8 +222,8 @@ fun CreateScreen(
                         // Trigger the ViewModel to send the request
                         viewModel.createExam(
                             Exam(
-                                teacherId = "63f6c27f5d0f6e001fc7f2e1", // Replace with actual teacher ID
-                                subject = "Math",    // Replace with actual subject
+                                teacherId = teacherId.toString(), // Replace with actual teacher ID
+                                subject = specialization.toString(),    // Replace with actual subject
                                 grade = selectedGrade.orEmpty(),
                                 chapters = selectedChapters.toList(),
                                 difficultyLevel = difficulty.toInt(),
@@ -251,3 +267,16 @@ fun CreateScreen(
     }
 
 }
+fun getTeacherId(context: Context): Flow<String?> {
+    val teacherIdKey = stringPreferencesKey("teacher_id")
+    return context.dataStore.data.map { preferences ->
+        preferences[teacherIdKey]
+    }
+}
+fun getSpecialization(context: Context): Flow<String?> {
+    val specializationKey = stringPreferencesKey("specialization")
+    return context.dataStore.data.map { preferences ->
+        preferences[specializationKey]
+    }
+}
+

@@ -10,14 +10,20 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
-import android.util.Log
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 import tn.esprit.examaijetpack.Constants.BACKEND_URL
+import android.content.Context
+import tn.esprit.examaijetpack.ui.screens.dataStore
 
 class LoginViewModel : ViewModel() {
 
     // Observable email and password
     val email = MutableLiveData<String>()
     val password = MutableLiveData<String>()
+    private val teacherIdKey = stringPreferencesKey("teacher_id")
+    private val specializationKey = stringPreferencesKey("specialization")
+
 
     // Loading state
     private val _isLoading = MutableLiveData<Boolean>()
@@ -30,6 +36,28 @@ class LoginViewModel : ViewModel() {
     // Login success state
     private val _loginSuccess = MutableLiveData<Boolean>()
     val loginSuccess: LiveData<Boolean> get() = _loginSuccess
+
+    private val _teacherId = MutableLiveData<String?>()
+    val teacherId: LiveData<String?> get() = _teacherId
+
+    private val _specialization = MutableLiveData<String?>()
+    val specialization: LiveData<String?> get() = _specialization
+
+    fun saveTeacherId(context: Context,teacherId: String) {
+        viewModelScope.launch {
+           // val teacherIdKey = stringPreferencesKey("teacher_id")
+            context.dataStore.edit { preferences ->
+                preferences[teacherIdKey] = teacherId
+            }
+        }
+    }
+    fun saveSpecialization(context: Context,specialization: String) {
+        viewModelScope.launch {
+            context.dataStore.edit { preferences ->
+                preferences[specializationKey] = specialization
+            }
+        }
+    }
 
     fun login() {
         // Validate input
@@ -67,6 +95,8 @@ class LoginViewModel : ViewModel() {
                         val jsonResponse = JSONObject(responseBody)
                         if (jsonResponse.has("accessToken")) {
                             _loginSuccess.value = true // Login successful
+                            _teacherId.value = jsonResponse.optString("teacherId")
+                            _specialization.value = jsonResponse.optString("specialization")
                         } else {
                             _errorMessage.value = "Unexpected response from server."
                         }

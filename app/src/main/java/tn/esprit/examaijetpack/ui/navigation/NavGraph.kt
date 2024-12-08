@@ -31,28 +31,18 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
             GetStartedScreen(navController = navController)
         }
         composable("login") {
-            val viewModel: LoginViewModel = viewModel()
-            val email by viewModel.email.observeAsState("")
-            val password by viewModel.password.observeAsState("")
-            val isLoading by viewModel.isLoading.observeAsState(false)
-            val errorMessage by viewModel.errorMessage.observeAsState(null)
-            val loginSuccess by viewModel.loginSuccess.observeAsState(false)
-
-            // Navigate to home screen when login succeeds
-            if (loginSuccess && navController.currentDestination?.route != "home") {
-                navController.navigate("home") {
-                    popUpTo(0) { inclusive = true } // Clears the entire backstack
-                }
-            }
-
+            val loginViewModel: LoginViewModel = viewModel()
+            val currentRoute = navController.currentDestination?.route
             LoginScreen(
-                email = email,
-                password = password,
-                isLoading = isLoading,
-                errorMessage = errorMessage,
-                onEmailChange = { viewModel.email.value = it },
-                onPasswordChange = { viewModel.password.value = it },
-                onLoginClick = { viewModel.login() },
+                viewModel = loginViewModel,
+                onLoginSuccess = {
+                    if (currentRoute != "home") {
+                        navController.navigate("home") {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+
+                },
                 onSignUpClick = { navController.navigate("signup") }
             )
         }

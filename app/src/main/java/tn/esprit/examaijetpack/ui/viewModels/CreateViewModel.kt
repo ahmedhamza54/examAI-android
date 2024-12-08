@@ -16,6 +16,7 @@ import tn.esprit.examaijetpack.Constants
 import tn.esprit.examaijetpack.ui.Models.Exam
 import okhttp3.OkHttpClient
 import retrofit2.http.GET
+import retrofit2.http.Path
 import retrofit2.http.Query
 import tn.esprit.examaijetpack.ui.Models.Subject_Grade_Semester
 import java.util.concurrent.TimeUnit
@@ -27,6 +28,9 @@ class CreateViewModel : ViewModel() {
 
     private val _examResponse = MutableStateFlow<Pair<String, String>?>(null)
     val examResponse: StateFlow<Pair<String, String>?> = _examResponse
+
+    private val _specialization = MutableStateFlow<String?>(null)
+    val specialization: StateFlow<String?> = _specialization
 
     // Retrofit Setup
     private val examApi: ExamApi by lazy {
@@ -62,6 +66,8 @@ class CreateViewModel : ViewModel() {
     }
 
 
+
+
     fun clearExamResponse() {
         _examResponse.value = null
     }
@@ -80,6 +86,7 @@ class CreateViewModel : ViewModel() {
             @Query("grade") grade: String,
             @Query("semester") semester: String
         ): List<String>
+
     }
 
 
