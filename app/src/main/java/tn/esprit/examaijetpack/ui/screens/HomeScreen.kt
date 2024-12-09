@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,12 +17,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import tn.esprit.examaijetpack.R
-import tn.esprit.examaijetpack.ui.navigation.BottomNavigationBar
 
 //@Preview
 import androidx.compose.runtime.*
@@ -29,9 +28,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import getTeacherId
+import tn.esprit.examaijetpack.ui.navigation.encode
 import tn.esprit.examaijetpack.ui.viewmodels.HomeViewModel
 import tn.esprit.examaijetpack.ui.viewmodels.Exam
-import androidx.compose.material3.MaterialTheme
 
 
 @Composable
@@ -63,7 +62,7 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            ExamsSection(exams = exams)
+            ExamsSection(exams = exams, navController = navController)
         }
     }
 }
@@ -155,7 +154,7 @@ fun WelcomeSection() {
 }
 
 @Composable
-fun ExamsSection(exams: List<Exam>) {
+fun ExamsSection(exams: List<Exam>, navController: NavController) {
     Column {
         Text(
             text = "Your Exams",
@@ -179,7 +178,7 @@ fun ExamsSection(exams: List<Exam>) {
                 verticalArrangement = Arrangement.spacedBy(8.dp) // Space between items
             ) {
                 items(exams) { exam ->
-                    ExamItem(exam = exam)
+                    ExamItem(exam = exam, navController = navController)
                 }
             }
         }
@@ -196,7 +195,7 @@ fun ExamsSection(exams: List<Exam>) {
 }
 
 @Composable
-fun ExamItem(exam: Exam) {
+fun ExamItem(exam: Exam,navController: NavController) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -210,7 +209,10 @@ fun ExamItem(exam: Exam) {
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        Column(modifier = Modifier.weight(1f)) {
+        Column(modifier = Modifier.weight(1f).fillMaxWidth().clickable {
+            // Navigate to the RegenerateScreen on item click
+            navController.navigate("regenerate/${exam._id}/${exam.text.encode()}")
+        }) {
             Text(text = exam.subject, fontWeight = FontWeight.Bold)
             Text(text = "Grade: ${exam.grade}", color = Color.Gray, fontSize = 12.sp)
             Text(text = "Difficulty: ${exam.difficultyLevel}", color = Color.Gray, fontSize = 12.sp)
@@ -219,9 +221,6 @@ fun ExamItem(exam: Exam) {
         Spacer(modifier = Modifier.width(8.dp))
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { /* TODO: Edit */ }) {
-                Icon(painter = painterResource(id = R.drawable.ic_edit), contentDescription = "Edit")
-            }
             IconButton(onClick = { /* TODO: Share */ }) {
                 Icon(painter = painterResource(id = R.drawable.ic_share), contentDescription = "Share")
             }

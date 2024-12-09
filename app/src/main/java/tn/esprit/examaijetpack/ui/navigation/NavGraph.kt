@@ -21,6 +21,7 @@ import tn.esprit.examaijetpack.ui.viewModels.SignUpViewModel
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import androidx.compose.ui.Modifier
+import tn.esprit.examaijetpack.ui.screens.EditScreen
 
 fun String.encode(): String = URLEncoder.encode(this, StandardCharsets.UTF_8.toString())
 
@@ -96,9 +97,17 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
         ) { backStackEntry ->
             val id = backStackEntry.arguments?.getString("id") ?: ""
             val text = backStackEntry.arguments?.getString("text") ?: ""
-            RegenerateScreen(context = navController.context, examId = id, examText = text)
+            RegenerateScreen(context = navController.context, examId = id, examText = text,navController = navController)
         }
-        composable("editor") { /* TODO: Add EditorScreen */ }
+        composable("Edit/{id}/{text}") { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("id") ?: ""
+            val text = backStackEntry.arguments?.getString("text") ?: ""
+            EditScreen(
+                examId = id,
+                initialText = text,
+                onSaveSuccess = { navController.popBackStack() }
+            )
+        }
         composable("create") {
             CreateScreen(
                 onNavigateToRegenerate = { id, text ->

@@ -6,39 +6,34 @@ import android.net.Uri
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.plcoding.pdf_renderercompose.PdfViewerScreen
-import fi.iki.elonen.NanoHTTPD
+import tn.esprit.examaijetpack.ui.navigation.NavGraph
+import tn.esprit.examaijetpack.ui.navigation.encode
 import tn.esprit.examaijetpack.ui.viewModels.RegenerateViewModel
-import java.io.File
-import java.io.OutputStream
+
 var examTextToRegenerate = ""
 
 @Composable
-fun RegenerateScreen(context: Context, examId: String, examText: String,regenerateViewModel: RegenerateViewModel = viewModel()) {
+fun RegenerateScreen(context: Context, examId: String, examText: String,regenerateViewModel: RegenerateViewModel = viewModel(),navController: NavHostController) {
     if (examTextToRegenerate.isEmpty())
     {
         examTextToRegenerate = examText
     }
-    var regenerateIsClicked = false
     val isLoading by regenerateViewModel.isLoading.collectAsState()
     val regenerateResponse by regenerateViewModel.regenerateResponse.collectAsState()
 
@@ -63,7 +58,6 @@ fun RegenerateScreen(context: Context, examId: String, examText: String,regenera
         )
        // lateinit var examTextToRegenerate: String
         if (regenerateResponse != null  )  {
-            regenerateIsClicked = false
             val (newId, newText) = regenerateResponse!!
             examTextToRegenerate = newText
            // Log.d("exam text ", examTextToRegenerate)
@@ -118,11 +112,13 @@ fun RegenerateScreen(context: Context, examId: String, examText: String,regenera
             onRegenerateClick = {
                 Log.d("exam text ", examTextToRegenerate)
                 regenerateViewModel.regenerateExam(examId, examTextToRegenerate, feedbackText)
-                regenerateIsClicked = true
             },
             onShareClick = {
                 pdfUri?.let { sharePdf(context, it) } // Handle the share action
-            }
+            },
+            examId,
+            examTextToRegenerate,
+            navController
         )
 
 
@@ -158,7 +154,10 @@ fun FeedbackSection(
     pdfUri: Uri?,
     onFeedbackTextChange: (String) -> Unit,
     onRegenerateClick: () -> Unit,
-    onShareClick: () -> Unit
+    onShareClick: () -> Unit,
+    examId: String,
+    examText: String,
+    navController: NavHostController
 ) {
     TextField(
         value = feedbackText,
@@ -216,7 +215,8 @@ fun FeedbackSection(
 
         // Edit Button
         Button(
-            onClick = { /* Handle Edit Action */ },
+            onClick = { navController.navigate("Edit/$examId/${examText.encode()}")
+            },
             colors = ButtonDefaults.buttonColors(
                 backgroundColor = Color.White,
                 contentColor = Color.Red
