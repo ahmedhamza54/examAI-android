@@ -8,6 +8,7 @@ import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -77,7 +78,7 @@ fun GetStartedScreen(navController: NavController) {
                 modifier = Modifier
                     .padding(16.dp)
                     .align(Alignment.CenterHorizontally),
-                activeColor = MaterialTheme.colors.primary,
+                activeColor = Color(0xFFE53935),
                 inactiveColor = MaterialTheme.colors.onSurface.copy(alpha = 0.4f)
             )
 
@@ -86,11 +87,11 @@ fun GetStartedScreen(navController: NavController) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary)
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFE53935))
             ) {
                 Text(
                     text = "GET STARTED",
-                    color = MaterialTheme.colors.onPrimary,
+                   // color = Color(0xFFE53935),
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
@@ -101,7 +102,7 @@ fun GetStartedScreen(navController: NavController) {
             ) {
                 Text(
                     text = "Already have an account? Log in",
-                    color = MaterialTheme.colors.primary,
+                    color = Color(0xFF000000),
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp
                 )

@@ -100,8 +100,8 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
             RegenerateScreen(context = navController.context, examId = id, examText = text,navController = navController)
         }
         composable("Edit/{id}/{text}") { backStackEntry ->
-            val id = backStackEntry.arguments?.getString("id") ?: ""
-            val text = backStackEntry.arguments?.getString("text") ?: ""
+            val id = backStackEntry.arguments?.getString("id") ?: "ID123"
+            val text = backStackEntry.arguments?.getString("text") ?: "here you can edit your exam"
             EditScreen(
                 examId = id,
                 initialText = text,

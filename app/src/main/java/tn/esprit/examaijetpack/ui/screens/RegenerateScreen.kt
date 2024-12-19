@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.plcoding.pdf_renderercompose.PdfViewerScreen
-import tn.esprit.examaijetpack.ui.navigation.NavGraph
 import tn.esprit.examaijetpack.ui.navigation.encode
 import tn.esprit.examaijetpack.ui.viewModels.RegenerateViewModel
 
@@ -34,6 +33,7 @@ fun RegenerateScreen(context: Context, examId: String, examText: String,regenera
     {
         examTextToRegenerate = examText
     }
+    var currentText = examText
     val isLoading by regenerateViewModel.isLoading.collectAsState()
     val regenerateResponse by regenerateViewModel.regenerateResponse.collectAsState()
 
@@ -60,6 +60,7 @@ fun RegenerateScreen(context: Context, examId: String, examText: String,regenera
         if (regenerateResponse != null  )  {
             val (newId, newText) = regenerateResponse!!
             examTextToRegenerate = newText
+            currentText = newText
            // Log.d("exam text ", examTextToRegenerate)
             //Log.d("exam text ", examTextToRegenerate)
 
@@ -117,7 +118,7 @@ fun RegenerateScreen(context: Context, examId: String, examText: String,regenera
                 pdfUri?.let { sharePdf(context, it) } // Handle the share action
             },
             examId,
-            examTextToRegenerate,
+            currentText,
             navController
         )
 

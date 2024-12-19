@@ -18,6 +18,7 @@ import tn.esprit.examaijetpack.R
 import tn.esprit.examaijetpack.ui.viewModels.LoginViewModel
 import android.content.Context
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.datastore.core.DataStore
@@ -91,13 +92,19 @@ fun LoginScreen(
         Button(
             onClick = { viewModel.login() },
             modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading.value
+            enabled = !isLoading.value,
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFE53935))
         ) {
             Text(if (isLoading.value) "Logging in..." else "Login")
         }
 
-        TextButton(onClick = onSignUpClick) {
-            Text("Don't have an account? Sign Up")
+        TextButton(onClick = onSignUpClick
+            ) {
+            Text(
+                text = "Don't have an account? Sign Up",
+                color = Color(0xFF000000) // Replace with your desired color
+            )
+
         }
     }
 }

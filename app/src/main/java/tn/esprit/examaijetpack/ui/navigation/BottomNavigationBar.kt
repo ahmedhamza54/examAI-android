@@ -16,7 +16,7 @@ import tn.esprit.examaijetpack.R
 
 sealed class BottomNavItem(val route: String, val icon: Int, val label: String) {
     object Home : BottomNavItem("home", R.drawable.ic_home, "Home")
-    object Editor : BottomNavItem("editor", R.drawable.ic_editor, "Editor")
+    object Editor : BottomNavItem("Edit/{id}/here you can edit your exam", R.drawable.ic_editor, "Editor")
     object Create : BottomNavItem("create", R.drawable.ic_create, "Create")
     object Favorites : BottomNavItem("favorites", R.drawable.ic_favorite, "Favorites")
     object Class : BottomNavItem("class", R.drawable.ic_class, "Class")

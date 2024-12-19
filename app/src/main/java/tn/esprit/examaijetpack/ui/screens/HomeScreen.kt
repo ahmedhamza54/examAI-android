@@ -49,6 +49,10 @@ fun HomeScreen(
 
     }
 
+    LaunchedEffect(homeViewModel.refreshTrigger.collectAsState()) {
+        homeViewModel.fetchExams(teacherId.toString())
+    }
+
     Scaffold(
         topBar = { HomeTopBar() },
         // bottomBar = { BottomNavigationBar(navController) }
@@ -195,7 +199,9 @@ fun ExamsSection(exams: List<Exam>, navController: NavController) {
 }
 
 @Composable
-fun ExamItem(exam: Exam,navController: NavController) {
+fun ExamItem(exam: Exam,navController: NavController,homeViewModel: HomeViewModel = viewModel()) {
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -224,9 +230,37 @@ fun ExamItem(exam: Exam,navController: NavController) {
             IconButton(onClick = { /* TODO: Share */ }) {
                 Icon(painter = painterResource(id = R.drawable.ic_share), contentDescription = "Share")
             }
-            IconButton(onClick = { /* TODO: Delete */ }) {
+            IconButton(onClick = {  showDeleteConfirmation = true }) {
                 Icon(painter = painterResource(id = R.drawable.ic_delete), contentDescription = "Delete")
             }
         }
+    }
+
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = { Text(text = "Confirm Deletion") },
+            text = { Text(text = "Are you sure you want to delete this exam?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    // Perform delete operation
+                    homeViewModel.deleteExam(exam._id)
+                    // Fetch the updated list of exams
+                    homeViewModel.fetchExams(exam.teacherId)
+                    // Close the dialog
+                    showDeleteConfirmation = false
+                }) {
+                    Text(text = "Yes")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    // Close the dialog without doing anything
+                    showDeleteConfirmation = false
+                }) {
+                    Text(text = "No")
+                }
+            }
+        )
     }
 }
