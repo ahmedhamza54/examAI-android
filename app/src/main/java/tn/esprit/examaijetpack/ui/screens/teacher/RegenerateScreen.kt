@@ -1,3 +1,5 @@
+package tn.esprit.examaijetpack.ui.screens.teacher
+
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -6,6 +8,7 @@ import android.net.Uri
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -22,15 +26,21 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.plcoding.pdf_renderercompose.PdfViewerScreen
+import tn.esprit.examaijetpack.R
 import tn.esprit.examaijetpack.ui.navigation.encode
 import tn.esprit.examaijetpack.ui.viewModels.RegenerateViewModel
 
 var examTextToRegenerate = ""
 
 @Composable
-fun RegenerateScreen(context: Context, examId: String, examText: String,regenerateViewModel: RegenerateViewModel = viewModel(),navController: NavHostController) {
-    if (examTextToRegenerate.isEmpty())
-    {
+fun RegenerateScreen(
+    context: Context,
+    examId: String,
+    examText: String,
+    regenerateViewModel: RegenerateViewModel = viewModel(),
+    navController: NavHostController
+) {
+    if (examTextToRegenerate.isEmpty()) {
         examTextToRegenerate = examText
     }
     var currentText = examText
@@ -45,105 +55,103 @@ fun RegenerateScreen(context: Context, examId: String, examText: String,regenera
         } ?: generatePdf(context, "Exam_$examId", examText)
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            "Your Exam",
-            style = MaterialTheme.typography.h6,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-       // lateinit var examTextToRegenerate: String
-        if (regenerateResponse != null  )  {
-            val (newId, newText) = regenerateResponse!!
-            examTextToRegenerate = newText
-            currentText = newText
-           // Log.d("exam text ", examTextToRegenerate)
-            //Log.d("exam text ", examTextToRegenerate)
+    Scaffold(
+        topBar = { HomeTopBar() }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                "Your Exam",
+                style = MaterialTheme.typography.h6,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
 
-           // val newPdfUri = generatePdf(context, "Exam_$newId", newText)
+            if (regenerateResponse != null) {
+                val (newId, newText) = regenerateResponse!!
+                examTextToRegenerate = newText
+                currentText = newText
 
-            // Display regenerated PDF
-            if (pdfUri != null) {
+                if (pdfUri != null) {
+                    PdfViewerScreen(
+                        pdfUri = pdfUri,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                    )
+                }
+            } else if (pdfUri != null) {
                 PdfViewerScreen(
                     pdfUri = pdfUri,
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
                 )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .background(Color.Gray.copy(alpha = 0.2f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Failed to create PDF.", color = Color.Red)
+                }
             }
-        } else if (pdfUri != null) {
-            // Display initial PDF
-            PdfViewerScreen(
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (pdfUri != null) {
+                Button(onClick = { openPdf(context, pdfUri) }) {
+                    Text("View PDF")
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            FeedbackSection(
+                context = context,
+                feedbackText = feedbackText,
                 pdfUri = pdfUri,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
+                onFeedbackTextChange = { feedbackText = it },
+                onRegenerateClick = {
+                    Log.d("exam text ", examTextToRegenerate)
+                    regenerateViewModel.regenerateExam(examId, examTextToRegenerate, feedbackText)
+                },
+                onShareClick = {
+                    pdfUri?.let { sharePdf(context, it) }
+                },
+                examId = examId,
+                examText = currentText,
+                navController = navController
             )
-        } else {
+        }
+
+        if (isLoading) {
+            var dotsCount by remember { mutableStateOf(1) }
+
+            LaunchedEffect(isLoading) {
+                while (isLoading) {
+                    dotsCount = (dotsCount % 5) + 1
+                    kotlinx.coroutines.delay(500)
+                }
+            }
+
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .background(Color.Gray.copy(alpha = 0.2f)),
+                    .fillMaxSize()
+                    .background(Color.White.copy(alpha = 0.7f)),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Failed to create PDF.", color = Color.Red)
+                Text(
+                    text = "Generating" + ".".repeat(dotsCount),
+                    style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                )
             }
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // View PDF Button
-        if (pdfUri != null) {
-            Button(onClick = { openPdf(context, pdfUri) }) {
-                Text("View PDF")
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-        // Feedback Section
-        FeedbackSection(
-            context = context,
-            feedbackText = feedbackText,
-            pdfUri = pdfUri, // Pass pdfUri here
-            onFeedbackTextChange = { feedbackText = it },
-            onRegenerateClick = {
-                Log.d("exam text ", examTextToRegenerate)
-                regenerateViewModel.regenerateExam(examId, examTextToRegenerate, feedbackText)
-            },
-            onShareClick = {
-                pdfUri?.let { sharePdf(context, it) } // Handle the share action
-            },
-            examId,
-            currentText,
-            navController
-        )
-
-
-    }
-    if (isLoading) {
-        var dotsCount by remember { mutableStateOf(1) }
-
-        LaunchedEffect(isLoading) {
-            while (isLoading) {
-                dotsCount = (dotsCount % 5) + 1 // Cycle from 1 to 5
-                kotlinx.coroutines.delay(500) // Adjust delay for speed of animation
-            }
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White.copy(alpha = 0.7f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "Generating" + ".".repeat(dotsCount),
-                style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            )
         }
     }
 }

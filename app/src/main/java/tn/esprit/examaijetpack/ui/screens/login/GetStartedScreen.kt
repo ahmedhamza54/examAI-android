@@ -1,7 +1,5 @@
-package tn.esprit.examaijetpack.ui.screens
+package tn.esprit.examaijetpack.ui.screens.login
 
-import android.os.Environment
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
@@ -20,7 +18,6 @@ import com.google.accompanist.pager.rememberPagerState
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import tn.esprit.examaijetpack.R
-import java.io.File
 
 @Composable
 fun GetStartedScreen(navController: NavController) {

@@ -19,6 +19,7 @@ import androidx.core.app.ActivityCompat
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import tn.esprit.examaijetpack.ui.navigation.BottomNavigationBar
+import tn.esprit.examaijetpack.ui.navigation.BottomNavigationBarStudent
 import tn.esprit.examaijetpack.ui.navigation.NavGraph
 import tn.esprit.examaijetpack.ui.theme.ExamAIjetpackTheme
 
@@ -45,10 +46,15 @@ fun MainScreen(navController: androidx.navigation.NavHostController) {
     // Define bottom navigation items
     val bottomNavItems = listOf(
         tn.esprit.examaijetpack.ui.navigation.BottomNavItem.Home,
-        tn.esprit.examaijetpack.ui.navigation.BottomNavItem.Editor,
         tn.esprit.examaijetpack.ui.navigation.BottomNavItem.Create,
-        tn.esprit.examaijetpack.ui.navigation.BottomNavItem.Favorites,
-        tn.esprit.examaijetpack.ui.navigation.BottomNavItem.Class
+        tn.esprit.examaijetpack.ui.navigation.BottomNavItem.Editor,
+        //tn.esprit.examaijetpack.ui.navigation.BottomNavItem.Favorites,
+        //tn.esprit.examaijetpack.ui.navigation.BottomNavItem.Class
+    )
+    val bottomNavItemsStudent = listOf(
+        tn.esprit.examaijetpack.ui.navigation.BottomNavItemStudent.Home,
+        //tn.esprit.examaijetpack.ui.navigation.BottomNavItemStudent.Calendar,
+        tn.esprit.examaijetpack.ui.navigation.BottomNavItemStudent.Attempts
     )
 
     // Get the current route
@@ -58,8 +64,9 @@ fun MainScreen(navController: androidx.navigation.NavHostController) {
     Scaffold(
         bottomBar = {
             // Show bottom navigation only for specific routes
-            if (currentRoute in bottomNavItems.map { it.route }) {
-                BottomNavigationBar(navController = navController)
+            when (currentRoute) {
+                in bottomNavItems.map { it.route } -> BottomNavigationBar(navController = navController)
+                in bottomNavItemsStudent.map { it.route } -> BottomNavigationBarStudent(navController = navController)
             }
         }
     ) { innerPadding ->

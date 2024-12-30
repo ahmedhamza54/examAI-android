@@ -1,6 +1,5 @@
 package tn.esprit.examaijetpack.ui.navigation
 
-//noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
@@ -14,22 +13,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import tn.esprit.examaijetpack.R
 
-sealed class BottomNavItem(val route: String, val icon: Int, val label: String) {
-    object Home : BottomNavItem("home", R.drawable.ic_home, "Home")
-    object Editor : BottomNavItem("Edit/{id}/here you can edit your exam", R.drawable.ic_editor, "Editor")
-    object Create : BottomNavItem("create", R.drawable.ic_create, "Create")
-    //object Favorites : BottomNavItem("favorites", R.drawable.ic_favorite, "Favorites")
-   // object Class : BottomNavItem("class", R.drawable.ic_class, "Class")
+sealed class BottomNavItemStudent(val route: String, val icon: Int, val label: String) {
+    object Home : BottomNavItemStudent("homeStudent", R.drawable.ic_home, "HomeStudent")
+   // object Calendar : BottomNavItemStudent("calendar", R.drawable.ic_favorite, "Calendar")
+    object Attempts : BottomNavItemStudent("attempts", R.drawable.ic_editor, "Attempts")
 }
 
 @Composable
-fun BottomNavigationBar(navController: NavController) {
+fun BottomNavigationBarStudent(navController: NavController) {
     val items = listOf(
-        BottomNavItem.Home,
-        BottomNavItem.Create,
-        BottomNavItem.Editor,
-        //BottomNavItem.Favorites,
-        //BottomNavItem.Class
+        BottomNavItemStudent.Home,
+        //BottomNavItemStudent.Calendar,
+        BottomNavItemStudent.Attempts
     )
 
     BottomNavigation(

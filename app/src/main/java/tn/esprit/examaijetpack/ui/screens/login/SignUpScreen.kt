@@ -1,4 +1,4 @@
-package tn.esprit.examaijetpack.ui.screens
+package tn.esprit.examaijetpack.ui.screens.login
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions

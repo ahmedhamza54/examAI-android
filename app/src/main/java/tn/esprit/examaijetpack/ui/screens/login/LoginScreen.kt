@@ -1,8 +1,7 @@
-package tn.esprit.examaijetpack.ui.screens
+package tn.esprit.examaijetpack.ui.screens.login
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
@@ -40,12 +39,16 @@ fun LoginScreen(
     val loginSuccess = viewModel.loginSuccess.observeAsState(false)
     val teacherId = viewModel.teacherId.observeAsState(false).value
     val specialization = viewModel.specialization.observeAsState(false).value
+    val studentId = viewModel.studentId.observeAsState(false).value
+    val grade = viewModel.grade.observeAsState(false).value
     val context = LocalContext.current // Get the current context
 
     if (loginSuccess.value == true ) {
         LaunchedEffect(Unit) {
             viewModel.saveTeacherId(context,teacherId.toString())
             viewModel.saveSpecialization(context,specialization.toString())
+            viewModel.saveStudentId(context,studentId.toString())
+            viewModel.saveGrade(context,grade.toString())
         }
         onLoginSuccess()
     }

@@ -3,70 +3,92 @@ package tn.esprit.examaijetpack.ui.viewModels
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import tn.esprit.examaijetpack.Constants.BACKEND_URL
-import java.net.HttpURLConnection
-import java.net.URL
-import kotlin.text.Charsets.UTF_8
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import org.json.JSONObject
+import okhttp3.OkHttpClient
+import retrofit2.HttpException
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.Body
+import retrofit2.http.PUT
+import retrofit2.http.Path
+import tn.esprit.examaijetpack.Constants
+import java.util.concurrent.TimeUnit
 
 class EditViewModel : ViewModel() {
 
-    var examText by mutableStateOf("")
-        private set
+    // StateFlows
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
 
-    fun updateText(newText: String) {
-        examText = newText
+    private val _examText = MutableStateFlow("")
+    val examText: StateFlow<String> = _examText
+
+    private val _updateResult = MutableStateFlow<String?>(null)
+    val updateResult: StateFlow<String?> = _updateResult
+
+    // Retrofit Setup
+    private val examApi: ExamApi by lazy {
+        val client = OkHttpClient.Builder()
+            .connectTimeout(60, TimeUnit.SECONDS) // Set connection timeout to 60 seconds
+            .readTimeout(60, TimeUnit.SECONDS)    // Set read timeout to 60 seconds
+            .writeTimeout(60, TimeUnit.SECONDS)   // Set write timeout to 60 seconds
+            .build()
+
+        Retrofit.Builder()
+            .baseUrl(Constants.BACKEND_URL + "/")
+            .client(client) // Use the custom client
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(ExamApi::class.java)
     }
 
-    fun saveExam(id: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+    // Update exam text
+    fun updateText(newText: String) {
+        _examText.value = newText
+    }
+
+    // Save exam
+    fun saveExam(id: String, onSuccess: (String) -> Unit, onError: (String) -> Unit) {
+        _isLoading.value = true
         viewModelScope.launch {
             try {
-                val backendUrl = "$BACKEND_URL/exams/$id"
-                Log.d("test", "")
-
-                val connection = URL(backendUrl).openConnection() as HttpURLConnection
-                connection.requestMethod = "PUT"
-                connection.setRequestProperty("Content-Type", "application/json")
-                connection.doOutput = true
-                Log.d("test1", "")
-
-                // Create a proper JSON object for the request body
-                val jsonObject = JSONObject()
-                jsonObject.put("text", examText)
-
-                Log.d("test2", "")
-
-                try {
-                    val requestBody = jsonObject.toString()
-                    connection.outputStream.use { outputStream ->
-                        outputStream.write(requestBody.toByteArray(Charsets.UTF_8))
-                    }
-                    Log.d("test3", "Output stream written successfully")
-                } catch (e: Exception) {
-                    onError("Failed to write to output stream: ${e.message}")
-                }
-
-
-                //connection.outputStream.use { outputStream ->
-                  //  outputStream.write(requestBody.toByteArray(Charsets.UTF_8))
-                //}
-
-
-
-                val responseCode = connection.responseCode
-                if (responseCode == HttpURLConnection.HTTP_OK) {
-                    onSuccess()
-                } else {
-                    onError("Failed to save exam: $responseCode")
-                }
+                val request = UpdateExamRequest(text = _examText.value)
+                val response = examApi.updateExam(id, request)
+                _updateResult.value = response.message
+                onSuccess(_examText.value)
+                //onSuccess()
+            } catch (e: HttpException) {
+                val errorMessage = "HTTP Error: Code ${e.code()}, Message: ${e.message()}"
+                Log.e("EditViewModel", errorMessage)
+                onError(errorMessage)
             } catch (e: Exception) {
-                onError(e.message ?: "Unknown error")
+                val errorMessage = "Error: ${e.message}"
+                Log.e("EditViewModel", errorMessage)
+                onError(errorMessage)
+            } finally {
+                _isLoading.value = false
             }
         }
     }
 
+    // API Definition
+    interface ExamApi {
+        @PUT("exams/{id}")
+        suspend fun updateExam(
+            @Path("id") id: String,
+            @Body request: UpdateExamRequest
+        ): UpdateExamResponse
+    }
+
+    // Request Model
+    data class UpdateExamRequest(
+        val text: String
+    )
+
+    // Response Model
+    data class UpdateExamResponse(
+        val message: String
+    )
 }

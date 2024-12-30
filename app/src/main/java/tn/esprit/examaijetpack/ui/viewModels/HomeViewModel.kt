@@ -56,6 +56,16 @@ class HomeViewModel : ViewModel() {
         }
         _refreshTrigger.value = !_refreshTrigger.value
     }
+    fun fetchExamsByGrade(grade: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val examList = api.getExamsByGrade(grade)
+                _exams.value = examList
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 
 
 }
@@ -63,6 +73,8 @@ class HomeViewModel : ViewModel() {
 interface ExamApi {
     @GET("exams/teacher/{teacherId}") // Adjust the endpoint as per your backend API
     suspend fun getExams(@Path("teacherId") teacherId: String): List<Exam>
+    @GET("exams/grade/{grade}")
+    suspend fun getExamsByGrade(@Path("grade") grade: String): List<Exam>
     @DELETE("exams/{examId}")
     suspend fun deleteExam(@Path("examId") examId: String)
 

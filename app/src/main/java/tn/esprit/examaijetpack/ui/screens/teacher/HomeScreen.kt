@@ -1,4 +1,4 @@
-package tn.esprit.examaijetpack.ui.screens
+package tn.esprit.examaijetpack.ui.screens.teacher
 
 
 import android.util.Log
@@ -26,8 +26,8 @@ import tn.esprit.examaijetpack.R
 import androidx.compose.runtime.*
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
-import getTeacherId
 import tn.esprit.examaijetpack.ui.navigation.encode
 import tn.esprit.examaijetpack.ui.viewmodels.HomeViewModel
 import tn.esprit.examaijetpack.ui.viewmodels.Exam
@@ -42,11 +42,13 @@ fun HomeScreen(
     val context = LocalContext.current
     val teacherIdFlow = getTeacherId(context)
     val teacherId by teacherIdFlow.collectAsState(initial = "Unknown")
+
+    var selectedYear by remember { mutableStateOf("2024-2025") }
+
     LaunchedEffect(Unit) {
-            homeViewModel.fetchExams( teacherId.toString())
+        homeViewModel.fetchExams(teacherId.toString())
 
         Log.d("teacherId", "teacherId: " + teacherId)
-
     }
 
     LaunchedEffect(homeViewModel.refreshTrigger.collectAsState()) {
@@ -66,10 +68,77 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            ExamsSection(exams = exams, navController = navController)
+            YearSelector(
+                selectedYear = selectedYear,
+                onYearChange = { newYear -> selectedYear = newYear }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (selectedYear == "2024-2025") {
+                ExamsSection(exams = exams, navController = navController)
+            } else {
+                Text(
+                    text = "No exams created.",
+                    color = Color.Gray,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }
+
+@Composable
+fun YearSelector(selectedYear: String, onYearChange: (String) -> Unit) {
+    val minYear = "2022-2023"
+    val maxYear = "2024-2025"
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(
+            onClick = {
+                val year = selectedYear.split("-")[0].toInt() - 1
+                onYearChange("$year-${year + 1}")
+            },
+            enabled = selectedYear != minYear
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_arrow_left),
+                contentDescription = "Previous Year",
+                modifier = Modifier.size(24.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Text(
+            text = selectedYear,
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp
+        )
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        IconButton(
+            onClick = {
+                val year = selectedYear.split("-")[0].toInt() + 1
+                onYearChange("$year-${year + 1}")
+            },
+            enabled = selectedYear != maxYear
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_arrow_right),
+                contentDescription = "Next Year",
+                modifier = Modifier.size(24.dp)
+            )
+        }
+    }
+}
+
 @Composable
 fun HomeTopBar() {
     TopAppBar(
@@ -89,12 +158,12 @@ fun HomeTopBar() {
             }
         },
         actions = {
-            IconButton(onClick = { /* TODO: Implement search */ }) {
-                Icon(painter = painterResource(id = R.drawable.ic_search), contentDescription = "Search")
-            }
-            IconButton(onClick = { /* TODO: Implement menu */ }) {
-              //  Icon(painter = painterResource(id = R.drawable.menu), contentDescription = "Menu")
-            }
+            //IconButton(onClick = { /* TODO: Implement search */ }) {
+               // Icon(painter = painterResource(id = R.drawable.ic_search), contentDescription = "Search")
+            //}
+          //  IconButton(onClick = { /* TODO: Implement menu */ }) {
+                //  Icon(painter = painterResource(id = R.drawable.menu), contentDescription = "Menu")
+            //}
         },
         backgroundColor = Color.White, // Background color for the top bar
         contentColor = Color.Black

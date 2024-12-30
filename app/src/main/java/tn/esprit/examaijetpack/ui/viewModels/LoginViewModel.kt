@@ -14,7 +14,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import tn.esprit.examaijetpack.Constants.BACKEND_URL
 import android.content.Context
-import tn.esprit.examaijetpack.ui.screens.dataStore
+import tn.esprit.examaijetpack.ui.screens.login.dataStore
 
 class LoginViewModel : ViewModel() {
 
@@ -23,7 +23,8 @@ class LoginViewModel : ViewModel() {
     val password = MutableLiveData<String>()
     private val teacherIdKey = stringPreferencesKey("teacher_id")
     private val specializationKey = stringPreferencesKey("specialization")
-
+    private val studentIdKey = stringPreferencesKey("student_id")
+    private val gradeKey = stringPreferencesKey("grade")
 
     // Loading state
     private val _isLoading = MutableLiveData<Boolean>()
@@ -43,6 +44,12 @@ class LoginViewModel : ViewModel() {
     private val _specialization = MutableLiveData<String?>()
     val specialization: LiveData<String?> get() = _specialization
 
+    private val _studentId = MutableLiveData<String?>()
+    val studentId: LiveData<String?> get() = _studentId
+
+    private val _grade = MutableLiveData<String?>()
+    val grade: LiveData<String?> get() = _grade
+
     fun saveTeacherId(context: Context,teacherId: String) {
         viewModelScope.launch {
            // val teacherIdKey = stringPreferencesKey("teacher_id")
@@ -55,6 +62,22 @@ class LoginViewModel : ViewModel() {
         viewModelScope.launch {
             context.dataStore.edit { preferences ->
                 preferences[specializationKey] = specialization
+            }
+        }
+    }
+
+    fun saveStudentId(context: Context,studentId: String) {
+        viewModelScope.launch {
+            // val teacherIdKey = stringPreferencesKey("teacher_id")
+            context.dataStore.edit { preferences ->
+                preferences[studentIdKey] = studentId
+            }
+        }
+    }
+    fun saveGrade(context: Context,grade: String) {
+        viewModelScope.launch {
+            context.dataStore.edit { preferences ->
+                preferences[gradeKey] = grade
             }
         }
     }
@@ -97,6 +120,8 @@ class LoginViewModel : ViewModel() {
                             _loginSuccess.value = true // Login successful
                             _teacherId.value = jsonResponse.optString("teacherId")
                             _specialization.value = jsonResponse.optString("specialization")
+                            _studentId.value = jsonResponse.optString("studentId")
+                            _grade.value = jsonResponse.optString("grade")
                         } else {
                             _errorMessage.value = "Unexpected response from server."
                         }
